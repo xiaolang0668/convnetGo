@@ -1,0 +1,27 @@
+{
+  "Server": "saiboot.com",
+  "UUID": "59b0447b-6707-44f2-9b8e-725cdcfec3f1",
+  "ClientID": "飞天狐狸",
+  "ServerPort": "13903",
+  "AllowConnect": True,
+  "AllowTcpPortRange": [
+    {
+      "Start": 10000,
+      "End": 20000
+    },
+    {
+      "Start": 10000,
+      "End": 20000
+    }
+  ],
+  "AllowUdpPortRange": [
+    {
+      "Start": 10000,
+      "End": 20000
+    },
+    {
+      "Start": 10000,
+      "End": 20000
+    }
+  ]
+}

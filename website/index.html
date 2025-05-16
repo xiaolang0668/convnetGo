@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConvnetGo - P2P网络连接工具</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .faq-list h3 {
+            color: #1e88e5;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .faq-list ul {
+            margin-bottom: 20px;
+        }
+        .faq-list li {
+            margin-bottom: 8px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #1e88e5;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .section {
+            margin: 40px 0;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .architecture-diagram {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .screenshot {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .screenshot img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: #1e88e5;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .download-btn:hover {
+            background-color: #1976d2;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>ConvnetGo</h1>
+            <p>基于STUN+ICE+WEBRTC协议的P2P网络连接工具</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="section">
+            <h2>软件功能介绍</h2>
+            <p>ConvnetGo是一款强大的P2P网络连接工具，主要特点包括：</p>
+            <ul>
+                <li>基于STUN+ICE+WEBRTC协议实现P2P连接</li>
+                <li>使用TAP虚拟网卡驱动实现网络通信</li>
+                <li>支持私有身份和公开身份的双重认证机制</li>
+                <li>提供用户友好的Web界面管理</li>
+                <li>支持自动重连和连接状态监控</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>P2P连接原理</h2>
+            <div class="architecture-diagram">
+                <svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+                    <!-- STUN/TURN服务器 -->
+                    <rect x="295" y="20" width="200" height="60" fill="#1e88e5" rx="5"/>
+                    <text x="400" y="55" fill="white" text-anchor="middle">STUN/TURN服务器</text>
+                    
+                    <!-- 客户端A -->
+                    <rect x="100" y="200" width="80" height="60" fill="#43a047" rx="5"/>
+                    <text x="140" y="235" fill="white" text-anchor="middle">客户端A</text>
+                    
+                    <!-- 客户端B -->
+                    <rect x="620" y="200" width="80" height="60" fill="#43a047" rx="5"/>
+                    <text x="660" y="235" fill="white" text-anchor="middle">客户端B</text>
+                    
+                    <!-- 连接线 -->
+                    <line x1="140" y1="200" x2="350" y2="80" stroke="#90caf9" stroke-width="2"/>
+                    <line x1="660" y1="200" x2="450" y2="80" stroke="#90caf9" stroke-width="2"/>
+                    <line x1="180" y1="230" x2="620" y2="230" stroke="#4caf50" stroke-width="2" stroke-dasharray="5,5"/>
+                    
+                    <!-- 说明文本 -->
+                    <text x="240" y="150" fill="#666">1. NAT穿透请求</text>
+                    <text x="560" y="150" fill="#666">2. NAT穿透请求</text>
+                    <text x="400" y="260" fill="#4caf50">3. P2P直连</text>
+                </svg>
+            </div>
+            <p>连接流程说明：</p>
+            <ol>
+                <li>客户端通过STUN服务器获取自己的公网IP和端口</li>
+                <li>使用ICE协议交换连接信息</li>
+                <li>通过WEBRTC协议建立P2P连接</li>
+                <li>如果P2P连接失败，则通过TURN服务器中继</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>软件界面展示</h2>
+            <div class="screenshot">
+                <img src="images/base.png" alt="基本界面">
+                <p>基本界面</p>
+            </div>
+            <div class="screenshot">
+                <img src="images/connectpeer.png" alt="连接对等点">
+                <p>连接对等点界面</p>
+            </div>
+            <div class="screenshot">
+                <img src="images/run.png" alt="运行状态">
+                <p>运行状态界面</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>使用方法</h2>
+            <ol>
+                <li>安装TAP驱动
+                    <ul>
+                        <li>从<a href="https://openvpn.net/community-downloads/" target="_blank">OpenVPN官网</a>下载安装包</li>
+                        <li>安装时仅选择TAP驱动组件</li>
+                    </ul>
+                </li>
+                <li>运行ConvnetGo
+                    <ul>
+                        <li>首次运行会自动生成私有身份（请妥善保存）</li>
+                        <li>登录后会获得公开身份，可以分享给其他用户</li>
+                    </ul>
+                </li>
+                <li>连接其他用户
+                    <ul>
+                        <li>输入对方的公开身份ID</li>
+                        <li>等待P2P连接建立</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>服务器部署</h2>
+            <ol>
+                <li>配置服务器
+                    <ul>
+                        <li>服务器的配置和客户端配置都是convnet.json，填写convnet.json中的stun信息</li>
+                        <pre>
+"Server": "saiboot.com",  //服务器的公网IP地址
+"ServerPort": "13903",    //CONVNET服务的端口号
+"ServerTurnPort": "13902",//要求打开TCP和UDP端口
+"ServerTurnUser": "YourTurnUser",   //只有正确的TURN用户才能进行中转，否则客户端只能进行P2P直连
+"ServerTurnPass": "YourTurnPass",
+"ServerTurnRealm": "saiboot.com" </pre>
+                    
+                    服务器启动：
+                        <pre>
+ convnetgo -s </pre>
+                        启动后注意检查和验证网络通断
+                    </ul>
+                </li>
+            
+                <li>配置客户端
+                    <ul>
+                        和服务器配置一样，服务器的所有信息都要在客户端配置，大部分需要修改的部分在网页客户端中都有体现
+                    <li>客户端多出的配置：</li>
+                        <pre>
+"UUID": "488481fa-73d5-4813-bcbf-778f13235a522",
+"ClientID": "飞翔的小笼包",
+"AutoConnectPassword": "123123",//连接密码
+"AllowTcpPortRange": [],//暂未实现
+"AllowUdpPortRange": []//暂未实现
+</pre>
+
+                    </ul>
+                </li>
+            </ol>
+
+                
+        </div>
+
+        <div class="section">
+            <h2>常见问题解答（FAQ）</h2>
+            <div class="faq-list">
+                <h3>1. 网络联通但无法互访怎么办？</h3>
+                <p>如果出现网络联通但无法互访的情况，请检查以下几点：</p>
+                <ul>
+                    <li>确认双方的TAP虚拟网卡驱动是否正确安装</li>
+                    <li>检查Windows防火墙是否允许ConvnetGo的网络访问</li>
+                    <li>确认双方的连接密码是否正确</li>
+                    <li>尝试重新建立连接或重启软件</li>
+                </ul>
+
+                <h3>2. 如何确保连接安全？</h3>
+                <p>ConvnetGo提供了双重身份认证机制：</p>
+                <ul>
+                    <li>私有身份：作为您的唯一标识，请妥善保管，不要泄露</li>
+                    <li>连接密码：建议定期更换，并使用复杂密码</li>
+                </ul>
+
+                <h3>3. 为什么有时会显示"服务器中继"？</h3>
+                <p>当P2P直连失败时，系统会自动切换到服务器中继模式。这可能是由于：</p>
+                <ul>
+                    <li>NAT类型限制导致无法建立P2P连接</li>
+                    <li>网络环境复杂，防火墙限制较严</li>
+                    <li>网络运营商限制了P2P连接</li>
+                </ul>
+                <h3>4. 如何提升P2P的成功率</h3>
+                <p>由网络不好的一方发起打洞请求会提高p2p的概率</p>
+                <p style="color: red;">小技巧：网络好的一方发起打洞，等3秒左右再次请求会中断打洞请求，由另一方发起打洞，不要频繁发起打洞请求，没有用，一次完整的尝试过程大概需要20秒</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>下载链接</h2>
+            <p>最新版本：v0.9</p>
+            <a href="download/convnet 0.9.zip" class="download-btn">下载ConvnetGo</a>
+            
+        </div>
+    </div>
+</body>
+</html>

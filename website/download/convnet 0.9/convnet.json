@@ -1,0 +1,31 @@
+{
+  "Server": "saiboot.com",
+  "ServerPort": "13903",
+  "ServerTurnPort": "13902",
+  "ServerTurnUser": "",
+  "ServerTurnPass": "",
+  "ServerTurnRealm": "",
+  "UUID": "7533d2b4-8be8-4bc7-b332-d25781778ddb",
+  "ClientID": "unicorn",
+  "AutoConnectPassword": "",
+  "AllowTcpPortRange": [
+    {
+      "Start": 10000,
+      "End": 20000
+    },
+    {
+      "Start": 10000,
+      "End": 20000
+    }
+  ],
+  "AllowUdpPortRange": [
+    {
+      "Start": 10000,
+      "End": 20000
+    },
+    {
+      "Start": 10000,
+      "End": 20000
+    }
+  ]
+}

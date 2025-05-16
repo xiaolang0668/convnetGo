@@ -1,0 +1,20 @@
+内部测试版本
+首先要安装一个TAP驱动，没有驱动会闪退
+	下载地址：https://openvpn.net/community-downloads/，安装时选择只安装TAP驱动即可
+
+然后运行convnetgo，初次运行会给你创建一个【私有身份】(唯一身份，相当于密码)，如果你下次还想别人联系到你要妥善保存这个ID
+
+convnetgo		linux版本
+convnetgo.exe		windows版本
+autoConnectPeer.txt		启动后自动连接的公开身份列表
+	示例：CVNID://saiboot.com:13903@d3569XXXXXXXXXXXXXXXXX99c6:11
+
+TODO===黑名单，端口屏蔽，密码访问
+
+convnetgo -s 参数可以启动为服务
+   convnetgo -s
+
+不加参数启动作为客户端启动，启动后会在本地拉起一个http://127.0.0.1:8092/的服务，访问这个地址控制cvn的工作
+
+启动后作用同示例服务器saiboot.com:13903,13092，要求同时打开TCP/UDP，本服务不会做转发服务，打洞不成功也不消耗服务器流量
+

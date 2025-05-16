@@ -1,0 +1,424 @@
+<html>
+    <head>
+        <title>Convnet client</title>
+        <script src="./js/jquery-3.5.1.js"></script>
+        <script src="./js/vue.js"></script>
+        <script src="./js/layer.js"></script>
+
+        <style>
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            .edit-input {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .form-group {
+                margin-bottom: 15px;
+                float: left;
+            }
+            .form-group label {
+                display: block;
+                margin-bottom: 5px;
+            }
+            .form-group input {
+                width: 300px;
+                padding: 8px;
+                box-sizing: border-box;
+            }
+            .form-group button {
+                padding: 8px 16px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                cursor: pointer;
+            }
+            .form-group button:hover {
+                background-color: #0056b3;
+            }
+            .form-group button:disabled{
+                background-color: #ddd;
+            }
+        </style>
+    </head>
+    <body style="margin:0px; overflow: hidden; font-family: Arial, sans-serif;padding: 100px;">
+        <div id="app">
+            <div id="clientinfo">
+                <h2>客户端信息</h2>
+                <div class="form-group">
+                    <label for="server">服务器</label>
+                    <input type="text" id="server" v-model="clientinfo.Server" :disabled="clientinfo.IsConnected" class="edit-input" />
+                </div>
+                <div class="form-group">
+                    <label for="serverPort">服务器端口</label>
+                    <input type="text" id="serverPort" v-model="clientinfo.ServerPort" :disabled="clientinfo.IsConnected" class="edit-input" />
+                </div>
+                <div class="form-group">
+                    
+                </div>
+                <div class="form-group">
+                    <label for="clientID">私有身份(唯一身份，相当于密码)</label>
+                    <input v-if="clientinfo.IsConnected" type="password" id="clientIDv" v-model="clientinfo.UUID" disabled class="edit-input"/>
+                    <input v-if="!clientinfo.IsConnected" type="text" id="clientID" v-model="clientinfo.UUID" disabled class="edit-input"/>
+                    <button id="regen" @click="generateUUID" :disabled="clientinfo.IsConnected" >重新生成</button>
+                </div>
+                <div class="form-group">
+                    <label for="clientID">昵称</label>
+                    <input type="text" id="clientID" v-model="clientinfo.ClientID" :disabled="clientinfo.IsConnected" class="edit-input" />
+                </div>
+
+                
+               
+
+                <div style=" clear:both">
+                    <div class="form-group">
+                        <label for="publicID" style="color: darkred;">公开身份（复制给其他用户用于连接）</label>
+                        <label for="myCvnIP">CVNID://{{clientinfo.Server}}:{{clientinfo.ServerPort}}@{{clientinfo.PublicID}}</label>
+                        <button @click="copyPublicID">复制公开身份</button>
+                    </div>
+                    
+                    <div class="form-group" style="padding-left: 40px;">
+                        <label for="myCvnIP">我的虚拟IP</label>
+                        <label for="myCvnIP" style="color: rgb(14, 143, 14); font-weight:bold">{{clientinfo.MyCvnIP}}</label>
+                    </div>
+
+                    <div class="form-group" style="float: right;">
+                        <!-- <button v-if="!isEditingClientInfo" @click="editClientInfo">编辑</button> -->
+                        <!-- <button v-else @click="saveClientInfo">保存(重启后生效)</button> -->
+                        <label>客户端操作</label>
+                        <button v-if="!clientinfo.IsConnected" @click="connect">连接CVN服务</button>
+                        <button v-if="clientinfo.IsConnected" @click="disconnect">断开服务器</button>
+                    </div>
+                </div>
+            </div>
+            <div style="clear:both; line-height:60px;">
+                        用戶列表    连接密码<input v-model="clientinfo.AutoConnectPassword" type="password"/>
+                        <button @click="allowConnect">更新连接密码</button><span style="color:red;font-size:12px;">点击更新后密码生效</span>
+                <div class="form-group" style="float: right;">
+                    <button  @click="connectPublicId('')">连接用户</button>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>CONVNETID前綴：<span style="font-size: 12px;">CVNID://{{clientinfo.Server}}:{{clientinfo.ServerPort}}@</span></th>
+                        <th>CvnIP</th>
+                        <th>是否连接</th>
+                        <th>用户昵称</th>
+                        <th>接收字节</th>
+                        <th>发送字节</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(user, index) in userList" :key="user.PublicID">
+                        <td>{{ user.PublicID }}<span style="color: gray; font-size:12px;">{{user.IsOnline?"":"(离线)"}}</span></td>
+                        <td >{{ user.CvnIP?user.CvnIP:"未知"}}</td>
+                        <td>{{user.IsConnected?"已连接":"未连接" }}
+                            <div v-if="user.IsOnline">
+                                <span v-if="user.IsConnected" style="font-size: 12px; color:#007bff">{{user.IsRelay?"服务器中继":"P2P"}}</span>
+                                <span v-if="!user.IsConnected">(连接步骤：{{user.IceState}})</span>
+                            </div>
+                        </td>
+                        <td>{{ user.UserNickName }}</td>
+                        <td>{{ formatBytes(user.Con_recv) }}</td>
+                        <td>{{ formatBytes(user.Con_send) }}</td>
+                        <td>
+                            <!-- <button v-if="!user.isEditing" @click="editUser(index)">编辑</button>
+                            <button v-else @click="saveUser(index)">保存</button> -->
+                            <button v-if="user.AccessPass=='ERROR'" style="background:rgb(154, 4, 4);color:#ddd" @click="connectPublicId('CVNID://'+clientinfo.Server+':'+clientinfo.ServerPort+'@'+user.PublicID,user.AccessPass)">密码错误</button>
+                            <button v-if="user.AccessPass!='ERROR'" @click="connectPublicId('CVNID://'+clientinfo.Server+':'+clientinfo.ServerPort+'@'+user.PublicID,user.AccessPass)">尝试重连</button>
+                            <button @click="removePublicId(user.PublicID,user.AccessPass)">删除自动连接</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </body>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue!',
+                userList: [],
+                clientinfo: {},
+            },
+            mounted() {
+                //定时刷新用户列表
+                setInterval(() => {
+                    console.log("refresh user list");
+                    if (this.clientinfo.IsConnected) {
+                            getUserList();
+                        }
+                }, 5000);
+            },
+            methods: {
+                formatBytes(bytes) {
+                    if (bytes === undefined || isNaN(bytes)) return '0 Bytes';
+                    if (bytes === 0) return '';
+                    const k = 1024;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                },
+                allowConnect(){
+                    // 提交修改到服务器
+                    $.ajax({
+                        url: `/api/client/allowConnect`, // 确保后端API路径正确
+                        method: "GET", 
+                        data: {  autoConnectPassword : this.clientinfo.AutoConnectPassword },
+                        contentType: "application/json",
+                        success: function(response) {
+                            console.log("请求已发送:", response);
+                            getClientInfo();
+                        },
+                        error: function(error) {
+                            console.error("allowConnect连接失败:", error);
+                        }
+                    });
+                },
+                connect(){
+                    app.saveClientInfo();
+                    // 提交修改到服务器
+                    $.ajax({
+                        url: `/api/client/connect`, // 确保后端API路径正确
+                        method: "GET", 
+                        contentType: "application/json",
+                        success: function(response) {
+                            console.log("请求已发送:", response);
+                            getClientInfo();
+                        },
+                        error: function(error) {
+                            console.error("connect连接失败:", error);
+                        }
+                    });
+                },
+                disconnect(){
+                    // 提交修改到服务器
+                    $.ajax({
+                        url: `/api/client/disconnect`, // 确保后端API路径正确
+                        method: "GET", 
+                        contentType: "application/json",
+                        success: function(response) {
+                            console.log("请求已发送:", response);
+                            getClientInfo();
+                        },
+                        error: function(error) {
+                            console.error("disconnect连接失败:", error);
+                        }
+                    });
+                },
+                copyPublicID(){
+                    navigator.clipboard.writeText("CVNID://"+app.clientinfo.Server+":"+app.clientinfo.ServerPort+"@"+this.clientinfo.PublicID).then(() => {
+                        alert('复制成功！');
+                    }).catch((error) => {
+                        alert('复制失败！');
+                    });
+                },
+                removePublicId(publicID){
+                        $.ajax({
+                            url: `/api/peer/removePublicId`, // 确保后端API路径正确
+                            method: "GET", 
+                            data: { PublicID:publicID},
+                            contentType: "application/json",
+                            success: function(response) {
+                                console.log("请求已发送:", response);
+                            },
+                            error: function(error) {
+                                console.error("peerconnect2连接失败:", error);
+                            }
+                        });
+                },
+                connectPublicId(publicID,password){
+                        //提示输入PUBLICID连接到对方
+                                layer.open({
+                                    type: 1,
+                                    title: '请输入对方PUBLICID',
+                                    area: ['660px', '170px'],
+
+                                    
+                                    content: '<div style="padding: 20px;">' +
+                                        '<div class="layui-form-item">' +
+                                        '<div class="layui-input-block">' +
+                                        '<input type="text" style="width:500px;" name="publicid" autocomplete="off" placeholder="请输入对方PUBLICID" class="layui-input">' +
+                                        '<input type="text" style="width:100px;" name="password" autocomplete="off" placeholder="连接密码" class="layui-input">' +
+                                        '</div>' +
+                                        '</div>' +
+                                        '</div>',
+                                    btn: ['确定', '取消'], // 此处前面已补上逗号.
+
+
+                                    success: function (layero, index) {
+                                        var iframe = window['layui-layer-iframe' + index];
+                                        layero.find('input[name="publicid"]').val(publicID);
+                                        layero.find('input[name="password"]').val(password);
+                                        
+                                        return false;
+                                    },
+                                    cancel: function (index, layero) {
+                                        layer.close(index);
+                                    },
+                                    yes: function (index, layero) {
+                                        var iframe = window['layui-layer-iframe' + index];
+                                        //获取password的值
+                                        
+                                        var password = layero.find('input[name="password"]').val();
+                                        var publicID = layero.find('input[name="publicid"]').val();
+                                        if (password=='ERROR') {
+                                            password=""
+                                        }
+                                        if (publicID) {
+                                                    //匹配clientinfo.Server和ServerPort
+                                                var reg = "CVNID://"+app.clientinfo.Server+":"+app.clientinfo.ServerPort+"@";
+                                                //转大写
+                                                if (publicID.toUpperCase().indexOf(reg.toUpperCase()) != 0) {
+                                                    alert("服务器不匹配="+"CVNID://"+app.clientinfo.Server+":"+app.clientinfo.ServerPort+"@"+"开头");
+                                                    return;
+                                                }
+                                                layer.close(index);
+                                                // 提交修改到服务器
+                                                $.ajax({
+                                                    url: `/api/peer/connect`, // 确保后端API路径正确
+                                                    method: "GET", 
+                                                    data: { PublicID: publicID,PassWord: password },
+                                                    contentType: "application/json",
+                                                    success: function(response) {
+                                                        console.log("请求已发送:", response);
+                                                        
+                                                    },
+                                                    error: function(error) {
+                                                        console.error("peerconnect连接失败:", error);
+                                                    }
+                                                });
+                                            }
+                                           
+
+
+                                    },
+                                    end: function (index,layero) {
+                                        layer.close(index);
+                                    }
+                                });
+                            
+                           
+                       
+
+                },
+                editUser(index) {
+                    this.$set(this.userList[index], 'isEditing', true);
+                },
+                saveUser(index) {
+                    const user = this.userList[index];
+                    this.$set(this.userList[index], 'isEditing', false);
+
+                    // 提交修改到服务器
+                    $.ajax({
+                        url: `/api/user/update/${user.PublicID}`, // 确保后端API路径正确
+                        method: "POST", // 使用post方法更新数据
+                        data: JSON.stringify({ UserNickName: user.UserNickName }),
+                        contentType: "application/json",
+                        success: function(response) {
+                            console.log("用户昵称更新成功:", response);
+                        },
+                        error: function(error) {
+                            console.error("用户昵称更新失败:", error);
+                        }
+                    });
+                },
+                disable(index) {
+                    // 实现禁用用户的逻辑
+                    alert("Todo");
+                    console.log("禁用用户:", this.userList[index].PublicID);
+                },
+                editClientInfo() {
+                    this.isEditingClientInfo = true;
+                },
+                saveClientInfo() {
+                    this.isEditingClientInfo = false;
+
+                    // 提交修改到服务器
+                    $.ajax({
+                        url: "/api/info/update", // 确保后端API路径正确
+                        method: "PUT", // 使用PUT方法更新数据
+                        data: JSON.stringify(this.clientinfo),
+                        contentType: "application/json",
+                        success: function(response) {
+                            console.log("客户端信息更新成功:", response);
+                        },
+                        error: function(error) {
+                            console.error("客户端信息更新失败:", error);
+                        }
+                    });
+                },
+                generateUUID() {
+                    //重新生成UUID後會導致身份丟失，你確定要重新生成麼？
+                    if (confirm("重新生成UUID会导致身份和IP丢失，你确定要重新生成么？")) {
+                        this.clientinfo.UUID = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                            var r = Math.random() * 16 | 0,
+                                v = c == 'x' ? r : (r & 0x3 | 0x8);
+                                return v.toString(16);
+                        })
+                    }
+                   
+                }
+            }
+        });
+
+        function getClientInfo() {
+            $.ajax({
+                url: "/api/info", // 确保后端API路径正确
+                method: "GET", // 明确HTTP方法
+                data: {}, // 如果需要传递参数，可以在此处定义
+                success: function(response) {
+                    console.log("客户端信息获取成功:", response);
+                    // 确保 response 是一个对象
+                    if (typeof response === 'object' && response !== null) {
+                        app.clientinfo = response;
+                    } else {
+                        console.error("响应数据格式不正确:", response);
+                    }
+                },
+                error: function(error) {
+                    console.error("客户端信息获取失败:", error);
+                }
+            });
+        }
+
+        // 定义 getUserList 函数
+        function getUserList() {
+            $.ajax({
+                url: "/api/user/list", // 确保后端API路径正确
+                method: "GET", // 明确HTTP方法
+                data: {}, // 如果需要传递参数，可以在此处定义
+                success: function(response) {
+                    console.log("用户列表获取成功:", response);
+                    if (response && Array.isArray(response)) {
+                        app.userList = response.map(user => ({ ...user, isEditing: false }));
+                    } else {
+                        console.error("响应数据格式不正确:", response);
+                    }
+                },
+                error: function(error) {
+                    console.error("用户列表获取失败:", error);
+                }
+            });
+        }
+
+        // 调用函数以测试
+        $(document).ready(function() {
+            getUserList(); // 页面加载完成后自动调用
+            getClientInfo();
+        });
+    </script>
+</html>
