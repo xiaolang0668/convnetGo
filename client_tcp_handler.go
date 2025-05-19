@@ -67,13 +67,6 @@ func ExecComand(cmdField []string) {
 	}
 }
 
-var udpserver *net.UDPConn
-
-func mymacstr() string {
-	str := client.Mac
-	return strings.ToUpper(strings.Replace(str, ":", "", -1))
-}
-
 func Getmymac(etherName string) string {
 
 	// 获取本机的MAC地址
@@ -90,8 +83,4 @@ func Getmymac(etherName string) string {
 	}
 
 	return ""
-}
-
-func cmdCalltoUserRespDecode(cmdField []string) {
-
 }

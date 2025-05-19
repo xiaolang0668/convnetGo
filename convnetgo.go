@@ -16,7 +16,7 @@ import (
 
 func getRandomWord() string {
 	words := []string{"apple", "banana", "cherry", "dog", "elephant", "fish", "grape", "hamburger", "ice cream", "juice", "kiwi", "lemon", "mango", "noodle", "orange", "pear", "quinoa", "raspberry", "sandwich", "tomato", "unicorn", "vodka", "watermelon", "xylophone", "yogurt", "zebra"}
-	rand.Seed(time.Now().UnixNano())
+
 	word := words[rand.Intn(len(words))]
 	return word
 }
